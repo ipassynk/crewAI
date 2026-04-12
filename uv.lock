@@ -13,7 +13,7 @@ resolution-markers = [
 ]
 
 [options]
-exclude-newer = "2026-04-10T16:00:00Z"
+exclude-newer = "2026-04-11T04:00:00Z"
 
 [manifest]
 members = [
@@ -1481,6 +1481,9 @@ github = [
 hyperbrowser = [
     { name = "hyperbrowser" },
 ]
+leap0 = [
+    { name = "leap0" },
+]
 linkup-sdk = [
     { name = "linkup-sdk" },
 ]
@@ -1573,6 +1576,7 @@ requires-dist = [
     { name = "gitpython", marker = "extra == 'github'", specifier = ">=3.1.41,<4" },
     { name = "hyperbrowser", marker = "extra == 'hyperbrowser'", specifier = ">=0.18.0" },
     { name = "langchain-apify", marker = "extra == 'apify'", specifier = ">=0.1.2,<1.0.0" },
+    { name = "leap0", marker = "extra == 'leap0'", specifier = ">=0.3.0,<1" },
     { name = "linkup-sdk", marker = "extra == 'linkup-sdk'", specifier = ">=0.2.2" },
     { name = "lxml", marker = "extra == 'rag'", specifier = ">=5.3.0,<5.4.0" },
     { name = "mcp", marker = "extra == 'mcp'", specifier = ">=1.6.0" },
@@ -1610,7 +1614,7 @@ requires-dist = [
     { name = "weaviate-client", marker = "extra == 'weaviate-client'", specifier = ">=4.10.2" },
     { name = "youtube-transcript-api", specifier = "~=1.2.2" },
 ]
-provides-extras = ["apify", "beautifulsoup4", "bedrock", "browserbase", "composio-core", "contextual", "couchbase", "databricks-sdk", "exa-py", "firecrawl-py", "github", "hyperbrowser", "linkup-sdk", "mcp", "mongodb", "multion", "mysql", "oxylabs", "patronus", "postgresql", "qdrant-client", "rag", "scrapegraph-py", "scrapfly-sdk", "selenium", "serpapi", "singlestore", "snowflake", "spider-client", "sqlalchemy", "stagehand", "tavily-python", "weaviate-client", "xml"]
+provides-extras = ["apify", "beautifulsoup4", "bedrock", "browserbase", "composio-core", "contextual", "couchbase", "databricks-sdk", "exa-py", "firecrawl-py", "github", "hyperbrowser", "leap0", "linkup-sdk", "mcp", "mongodb", "multion", "mysql", "oxylabs", "patronus", "postgresql", "qdrant-client", "rag", "scrapegraph-py", "scrapfly-sdk", "selenium", "serpapi", "singlestore", "snowflake", "spider-client", "sqlalchemy", "stagehand", "tavily-python", "weaviate-client", "xml"]
 
 [[package]]
 name = "cryptography"
@@ -3617,6 +3621,25 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/dd/8d/2161f46485d9c36c0fa0e1c997faf08bb7843027e59b549598e49f55f8bf/latex2mathml-3.79.0.tar.gz", hash = "sha256:11bde318c2d2d6fcdd105a07509d867cee2208f653278eb80243dec7ea77a0ce", size = 151103, upload-time = "2026-03-12T23:25:08.028Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/fd/92/56a954dd59637dd2ee013581fa3beea0821f17f2c07f818fc51dcc11fd10/latex2mathml-3.79.0-py3-none-any.whl", hash = "sha256:9f10720d4fcf6b22d1b81f6628237832419a7a29783c13aa92fa8d680165e63d", size = 73945, upload-time = "2026-03-12T23:25:09.466Z" },
+]
+
+[[package]]
+name = "leap0"
+version = "0.5.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "httpx" },
+    { name = "opentelemetry-api" },
+    { name = "opentelemetry-exporter-otlp-proto-http" },
+    { name = "opentelemetry-sdk" },
+    { name = "pydantic" },
+    { name = "tenacity" },
+    { name = "typing-extensions" },
+    { name = "websockets" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/83/89/d42f06692e0acf874de49e8221e9f8cb59ebec24bf9f8e80fa65a40f2a30/leap0-0.5.1.tar.gz", hash = "sha256:4fad8243395bdf3a9e05ca493d57d577aeb71a8c2b027e1d59146148867986f3", size = 77913, upload-time = "2026-04-08T02:05:33.01Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b1/a1/e1f9311ff79bf68d2d2509f83c12f0acb5aaf6d55143f120d35acffba1d9/leap0-0.5.1-py3-none-any.whl", hash = "sha256:66fea112af3945b2c009dc41f181eafabc3cf3668682498a71635d3b10c995d8", size = 103611, upload-time = "2026-04-08T02:05:31.584Z" },
 ]
 
 [[package]]

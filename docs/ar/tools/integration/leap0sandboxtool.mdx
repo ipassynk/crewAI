@@ -1,0 +1,112 @@
+---
+title: أدوات Leap0 Sandbox
+description: تشغيل أوامر shell ولغة Python وقراءة/كتابة الملفات في بيئة Leap0 السحابية المعزولة من وكلاء CrewAI
+icon: server
+mode: "wide"
+---
+
+# مجموعة أدوات Leap0 Sandbox
+
+تكشف تكامل Leap0 عن أربع أدوات CrewAI تعمل فوق [بيئة Leap0](https://leap0.dev) السحابية المعزولة: تشغيل Python مع تثبيتات pip اختيارية، وتشغيل أوامر shell، وقراءة الملفات، وكتابة ملفات نصية. استخدمها عندما يجب تنفيذ الشيفرة بأمان في السحابة بدلًا من الجهاز المضيف.
+
+## التثبيت
+
+```bash
+uv pip install 'crewai-tools[leap0]'
+```
+
+أو باستخدام pip:
+
+```bash
+pip install "crewai-tools[leap0]"
+```
+
+## المتطلبات
+
+- مفتاح API لـ Leap0 في البيئة (`LEAP0_API_KEY`)
+- حزمة `leap0` لـ Python (تُثبَّت عبر الإضافة أعلاه)
+
+## الاستخدام
+
+أنشئ `Leap0Client`، وأنشئ بيئة معزولة أو أشر إليها، ثم ابنِ مجموعة الأدوات، ومرّر الأدوات إلى الوكيل، وشغّل الطاقم، ثم استدعِ `cleanup()` على مجموعة الأدوات لحذف البيئة المعزولة وإغلاق العميل عند الانتهاء.
+
+```python
+import os
+
+from crewai import Agent, Crew, Task
+from leap0 import Leap0Client
+
+from crewai_tools.tools.leap0_sandbox_tool import create_leap0_sandbox_toolkit
+
+
+def main() -> None:
+    if not os.environ.get("LEAP0_API_KEY"):
+        raise SystemExit("عيّن LEAP0_API_KEY")
+
+    client = Leap0Client()
+    sandbox = client.sandboxes.create()
+    toolkit, tools = create_leap0_sandbox_toolkit(client, sandbox)
+
+    try:
+        developer = Agent(
+            role="مطوّر Python",
+            goal="حل المهام باستخدام الشيفرة داخل البيئة المعزولة",
+            backstory="تشغّل الشيفرة عبر leap0_execute_code والأدوات المرتبطة.",
+            tools=tools,
+            verbose=True,
+        )
+        task = Task(
+            description="احسب مجموع الأعداد الصحيحة من 1 إلى 100 بلغة Python وأعد النتيجة.",
+            agent=developer,
+            expected_output="النتيجة الرقمية.",
+        )
+        crew = Crew(agents=[developer], tasks=[task], verbose=True)
+        print(crew.kickoff())
+    finally:
+        toolkit.cleanup()
+```
+
+### مسارات الاستيراد
+
+يمكنك استيراد الدالة المُنشِئة من وحدة الأدوات الفرعية (موصى به) أو من حزمة `crewai_tools` الرئيسية عند تثبيت `[leap0]`:
+
+```python
+from crewai_tools.tools.leap0_sandbox_tool import create_leap0_sandbox_toolkit
+# أو
+from crewai_tools import create_leap0_sandbox_toolkit
+```
+
+## الأدوات
+
+| اسم الأداة | الغرض |
+| :-------- | :------ |
+| **leap0_execute_code** | تشغيل Python 3 داخل البيئة المعزولة؛ الحقل الاختياري `libraries_used` يثبّت حزم PyPI أولًا |
+| **leap0_execute_command** | تشغيل أمر shell داخل البيئة المعزولة |
+| **leap0_read_file** | قراءة ملف (مسار مطلق تحت `/`) |
+| **leap0_write_file** | كتابة نص UTF-8 إلى مسار (مسار مطلق تحت `/`) |
+
+## معاملات `create_leap0_sandbox_toolkit`
+
+| المعامل | النوع | الافتراضي | الوصف |
+| :------- | :--- | :------ | :---------- |
+| **client** | `Leap0Client` | (مطلوب) | عميل مُصدَّق (يقرأ `LEAP0_API_KEY` افتراضيًا) |
+| **sandbox** | كائن بيئة معزولة أو `str` | (مطلوب) | بيئة من `client.sandboxes.create()`، أو معرّف بيئة كنص (يُحلّ عبر `client.sandboxes.get`) |
+| **default_timeout** | `int` | `1800` | مهلة العملية الافتراضية بالثواني |
+| **delete_sandbox_on_cleanup** | `bool` | `True` | إن كانت `True`، يحذف `cleanup()` البيئة المعزولة |
+| **close_client_on_cleanup** | `bool` | `True` | إن كانت `True`، يغلق `cleanup()` العميل |
+
+## متغيرات البيئة
+
+```bash
+LEAP0_API_KEY=your-leap0-api-key
+```
+
+## التنظيف
+
+استدعِ `toolkit.cleanup()` دائمًا بعد انتهاء الطاقم (أو استخدم `try` / `finally`) حتى لا تبقى البيئات المعزولة قيد التشغيل. المجموعة **آمنة للتكرار**: استدعاءات `cleanup()` المتكررة لا تسبب ضررًا.
+
+## حالات الاستخدام
+
+- **تنفيذ شيفرة آمن**: السماح للوكلاء بتشغيل شيفرة غير موثوقة أو تجريبية خارج الجهاز المضيف
+- **عزل التبعيات**: تثبيت الحزم داخل البيئة المعزولة دون تلويث البيئة المحلية
+- **معالجة البيانات**: قراءة/كتابة الملفات داخل البيئة المعزولة لسير عمل وكلاء يشبه ETL

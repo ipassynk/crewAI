@@ -1,0 +1,112 @@
+---
+title: Ferramentas Leap0 Sandbox
+description: Execute comandos shell, Python e leitura/gravação de arquivos em um sandbox na nuvem Leap0 a partir dos seus agentes CrewAI
+icon: server
+mode: "wide"
+---
+
+# Kit de ferramentas Leap0 Sandbox
+
+A integração com o Leap0 expõe quatro ferramentas CrewAI apoiadas por um [sandbox remoto Leap0](https://leap0.dev): executar Python com instalações opcionais via pip, rodar comandos shell, ler arquivos e gravar arquivos de texto. Use quando os agentes precisarem executar código com segurança na nuvem em vez da máquina host.
+
+## Instalação
+
+```bash
+uv pip install 'crewai-tools[leap0]'
+```
+
+Ou com o pip:
+
+```bash
+pip install "crewai-tools[leap0]"
+```
+
+## Requisitos
+
+- Uma chave de API Leap0 no ambiente (`LEAP0_API_KEY`)
+- O SDK Python `leap0` (instalado pelo extra acima)
+
+## Uso
+
+Crie um `Leap0Client`, crie ou referencie um sandbox, monte o kit de ferramentas, passe as ferramentas para um agente, inicie a crew e, ao terminar, chame `cleanup()` no kit para excluir o sandbox e fechar o cliente.
+
+```python
+import os
+
+from crewai import Agent, Crew, Task
+from leap0 import Leap0Client
+
+from crewai_tools.tools.leap0_sandbox_tool import create_leap0_sandbox_toolkit
+
+
+def main() -> None:
+    if not os.environ.get("LEAP0_API_KEY"):
+        raise SystemExit("Defina LEAP0_API_KEY")
+
+    client = Leap0Client()
+    sandbox = client.sandboxes.create()
+    toolkit, tools = create_leap0_sandbox_toolkit(client, sandbox)
+
+    try:
+        developer = Agent(
+            role="Desenvolvedor Python",
+            goal="Resolver tarefas com código no sandbox",
+            backstory="Você executa código com leap0_execute_code e ferramentas relacionadas.",
+            tools=tools,
+            verbose=True,
+        )
+        task = Task(
+            description="Calcule em Python a soma dos inteiros de 1 a 100 e devolva o resultado.",
+            agent=developer,
+            expected_output="O resultado numérico.",
+        )
+        crew = Crew(agents=[developer], tasks=[task], verbose=True)
+        print(crew.kickoff())
+    finally:
+        toolkit.cleanup()
+```
+
+### Caminhos de importação
+
+Você pode importar a fábrica pelo submódulo de ferramentas (recomendado) ou pelo pacote raiz `crewai_tools` quando `[leap0]` estiver instalado:
+
+```python
+from crewai_tools.tools.leap0_sandbox_tool import create_leap0_sandbox_toolkit
+# ou
+from crewai_tools import create_leap0_sandbox_toolkit
+```
+
+## Ferramentas
+
+| Nome da ferramenta | Finalidade |
+| :----------------- | :--------- |
+| **leap0_execute_code** | Executa Python 3 no sandbox; o campo opcional `libraries_used` instala pacotes PyPI antes |
+| **leap0_execute_command** | Executa um comando shell no sandbox |
+| **leap0_read_file** | Lê um arquivo (caminho absoluto sob `/`) |
+| **leap0_write_file** | Grava texto UTF-8 em um caminho (caminho absoluto sob `/`) |
+
+## Argumentos de `create_leap0_sandbox_toolkit`
+
+| Argumento | Tipo | Padrão | Descrição |
+| :-------- | :--- | :----- | :-------- |
+| **client** | `Leap0Client` | (obrigatório) | Cliente autenticado (lê `LEAP0_API_KEY` por padrão) |
+| **sandbox** | objeto sandbox ou `str` | (obrigatório) | Sandbox retornado por `client.sandboxes.create()`, ou id do sandbox como string (resolvido com `client.sandboxes.get`) |
+| **default_timeout** | `int` | `1800` | Tempo limite padrão do processo, em segundos |
+| **delete_sandbox_on_cleanup** | `bool` | `True` | Se `True`, `cleanup()` exclui o sandbox |
+| **close_client_on_cleanup** | `bool` | `True` | Se `True`, `cleanup()` fecha o cliente |
+
+## Variáveis de ambiente
+
+```bash
+LEAP0_API_KEY=your-leap0-api-key
+```
+
+## Limpeza
+
+Sempre chame `toolkit.cleanup()` quando a crew concluir (ou use `try` / `finally`) para que os sandboxes não fiquem em execução. O kit é **idempotente**: várias chamadas a `cleanup()` são seguras.
+
+## Casos de uso
+
+- **Execução segura de código**: permitir que agentes executem código não confiável ou experimental fora do host
+- **Isolamento de dependências**: instalar pacotes apenas no sandbox sem poluir o ambiente local
+- **Processamento de dados**: ler/gravar arquivos dentro do sandbox para fluxos de agentes no estilo ETL
